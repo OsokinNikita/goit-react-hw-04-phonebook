@@ -8,6 +8,7 @@ export const Container = styled.form`
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+
   gap: 20px;
   width: 350px;
   padding: ${p => p.theme.space[4]}px;
@@ -28,9 +29,11 @@ export const Container = styled.form`
 //   border: none;
 //   cursor: pointer;
 //   outline: none;
+
 //   padding: 12px 20px;
 //   font-size: ${p => p.theme.fontSizes.m};
 //   font-weight: ${p => p.theme.fontWeights.bold};
+
 //   color: ${p => p.theme.colors.white};
 //   background-color: ${p => p.theme.colors.blue};
 //   border-radius: 30px;
