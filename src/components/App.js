@@ -1,43 +1,29 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { nanoid } from 'nanoid';
 import { ContactForm } from './ContactForm/ContactForm';
 import { Filter } from './Filter/Filter';
 import { ContactList } from './ContactList/ContactList ';
 import { Container, Title, SecondTitle } from './App.styled';
+import {
+  checkContactsName,
+  getDataFromLocalStorage,
+  setDataToLocalStorage,
+} from './utils';
 
-const STORAGE_FORM_DATA = 'contacts';
+export const App = () => {
+  const [contacts, setContacts] = useState(() => getDataFromLocalStorage());
+  const [filter, setFilter] = useState('');
 
-export class App extends Component {
-  state = {
-    contacts: [],
-    filter: '',
-  };
+  useEffect(() => {
+    setDataToLocalStorage(contacts);
+  }, [contacts]);
 
-  componentDidMount() {
-    const savedContacts = localStorage.getItem(STORAGE_FORM_DATA);
+  const filteredContacts = contacts.filter(contact =>
+    contact.name.toLowerCase().includes(filter.toLowerCase())
+  );
 
-    if (savedContacts) {
-      try {
-        const parsedContacts = JSON.parse(savedContacts);
-        this.setState({ contacts: parsedContacts });
-      } catch (error) {
-        this.setState({ contacts: [] });
-      }
-    }
-  }
-
-  componentDidUpdate(_, prevState) {
-    const prevContacts = prevState.contacts;
-    const nextContacts = this.state.contacts;
-
-    if (nextContacts !== prevContacts) {
-      localStorage.setItem(STORAGE_FORM_DATA, JSON.stringify(nextContacts));
-    }
-  }
-
-  addContact = newContact => {
-    const { name, number } = newContact;
-    if (this.checkContactsName(name)) {
+  const handleAddContact = (name, number) => {
+    if (checkContactsName(contacts, name)) {
       alert(`${name} is already in contacts.`);
       return;
     }
@@ -48,56 +34,35 @@ export class App extends Component {
       number,
     };
 
-    this.setState(prevState => ({
-      contacts: [contact, ...prevState.contacts],
-    }));
+    setContacts(prevContacts => [contact, ...prevContacts]);
   };
 
-  changeFilter = e => {
-    this.setState({ filter: e.currentTarget.value });
+  const handleChangeFilter = e => {
+    setFilter(e.currentTarget.value);
   };
 
-  getContactsByName = () => {
-    const { filter, contacts } = this.state;
-    const normalizedFilter = filter.toLowerCase();
-
-    return contacts.filter(contact =>
-      contact.name.toLowerCase().includes(normalizedFilter)
+  const handleDeleteContact = contactId => {
+    setContacts(prevContacts =>
+      prevContacts.filter(contact => contact.id !== contactId)
     );
   };
 
-  checkContactsName = name => {
-    const { contacts } = this.state;
-    const normalizedName = name.toLowerCase();
-    return contacts.some(({ name }) => normalizedName === name.toLowerCase());
-  };
+  return (
+    <Container>
+      <Title>Phonebook</Title>
+      <ContactForm onSubmit={handleAddContact} />
 
-  deleteContact = contactId => {
-    this.setState(prevState => ({
-      contacts: prevState.contacts.filter(contact => contact.id !== contactId),
-    }));
-  };
-
-  render() {
-    const { filter, contacts } = this.state;
-    const filteredContacts = this.getContactsByName();
-    return (
-      <Container>
-        <Title>Phonebook</Title>
-        <ContactForm onSubmit={this.addContact} />
-
-        <SecondTitle>Contacts</SecondTitle>
-        {contacts.length > 0 && (
-          <>
-            <Filter value={filter} onChange={this.changeFilter} />
-            <ContactList
-              contacts={filteredContacts}
-              onDeleteContact={this.deleteContact}
-            />
-          </>
-        )}
-        {contacts.length === 0 && <p>There is no contacts</p>}
-      </Container>
-    );
-  }
-}
+      <SecondTitle>Contacts</SecondTitle>
+      {contacts.length > 0 && (
+        <>
+          <Filter value={filter} onChange={handleChangeFilter} />
+          <ContactList
+            contacts={filteredContacts}
+            onDeleteContact={handleDeleteContact}
+          />
+        </>
+      )}
+      {contacts.length === 0 && <p>There is no contacts</p>}
+    </Container>
+  );
+};
